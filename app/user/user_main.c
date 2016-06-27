@@ -4,7 +4,6 @@
 
 	家庭实时温湿度传感器，把握天气变化，云端掌控。
 *******************************************************************************/
-
 #include <osapi.h>
 #include <os_type.h>
 #include <at_custom.h>		//切记务必包含 at_custom.h
@@ -13,14 +12,13 @@
 
 //取出温湿度数据，此处只使用了温度数据
 void ICACHE_FLASH_ATTR push_temperature(void* param) {
-    char buf[32] = { 0 };
+    char buf[8] = { 0 };
     //读取DHT数据，参数0代表非强制读取，取1则强制同步DHT读数，此处不需要。
     struct sensor_reading *dht = readDHT(0);
     //如果读取DHT数据失败，或者未连接到平台，都放弃本次数据推送。
     if(!dht->success) return;
     if(espush_server_connect_status() != STATUS_CONNECTED) return;
-    //温度数据乘以了100，因为乐鑫SDK的os_sprintf函数没有实现float浮点数类型的格式化，所以此处简单处理。
-    //将数据打上wd 标签，所谓标签即是在数居前增加的 逗号分隔的字符串，目前仅支持单标签
+    //温度数据乘以了100，因为乐鑫SDK的os_sprintf函数没有实现float浮点数类型的格式化，所以此处简单处理。将数据打上wd 标签，所谓标签即是在数居前增加的 逗号分隔的字符串，目前仅支持单标签
     os_sprintf(buf, "wd,%d", dht->temperature * 100);
     //将数据推送到平台。
     espush_msg_plan(buf, os_strlen(buf), get_timestamp());
